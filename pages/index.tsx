@@ -3,9 +3,8 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState } from 'react';
 import styles from '../styles/Home.module.css'
-import {ICountry} from '../interfaces';
-import FrontEndController from '../frontEndController'
-
+import { ICountry } from '../interfaces';
+import mysql from 'serverless-mysql';
 
 interface IColumn {
   key: string;
@@ -28,7 +27,7 @@ const columns = [
   { key: 'phone', name: 'Telefonvorwahl', fieldName: 'phone', minWidth: 100, maxWidth: 200, isResizable: true },
 ]
 
-const Home: NextPage = ({countries}: InferGetStaticPropsType<typeof getStaticProps>) => {
+const Home: NextPage = ({ countries }: InferGetStaticPropsType<typeof getStaticProps>) => {
   // create state for countries
   const [countriesState, setCountries] = useState<ICountry[]>(countries);
 
@@ -81,7 +80,30 @@ const Home: NextPage = ({countries}: InferGetStaticPropsType<typeof getStaticPro
 }
 
 export const getStaticProps: GetStaticProps = async (context) => {
-  const countries = await FrontEndController.getAllCountries();
+
+  const db = mysql({
+    config: {
+      host: "localhost",
+      user: "user",
+      password: "user1234",
+      database: "laenderdb",
+    },
+  });
+  const result: any = await db.query("SELECT * FROM laender");
+
+  // convert all results to ICountry
+  var countries: ICountry[] = [];
+  for (var i = 0; i < result?.length || 0; i++) {
+    countries.push({
+      name: result[i].Name,
+      area: result[i].Area,
+      population: result[i].Population,
+      leader: result[i].Leader,
+      phone: result[i].Phone,
+      id: result[i].LaenderId
+    });
+  }
+
   return {
     props: {
       countries: countries,
