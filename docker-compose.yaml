@@ -1,0 +1,31 @@
+services:
+
+  app:
+    image: nextjs-app
+    build:
+      context: .
+      dockerfile: Dockerfile.nextjs-app
+    ports:
+      - 8081:3000
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_DATABASE: laenderdb
+      DB_PORT: 3306
+    depends_on:
+      - db
+  
+  db:
+    image: db
+    build:
+      context: .
+      dockerfile: Dockerfile.mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laenderdb
+      MYSQL_HOSTNAME: db
+    ports:
+      - 8802:3306    
