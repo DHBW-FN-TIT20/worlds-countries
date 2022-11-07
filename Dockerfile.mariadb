@@ -1,0 +1,3 @@
+FROM mariadb:latest
+
+ADD laenderdb.sql /docker-entrypoint-initdb.d/laenderdb.sql
