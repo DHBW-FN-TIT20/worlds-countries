@@ -1,26 +1,31 @@
-# Rebuild the source code only when needed
+# machine 1: deps-and-builder
+# installs the dependencies and builds the app
 FROM node:16-alpine AS deps-and-builder
 WORKDIR /app
 COPY . .
 
+# install dependencies
 RUN npm ci
 
+# build the app
 RUN npm run build
 
-# Production image, copy all the files and run next
+# --------------------------------------------------------------------------------
+
+# machine 2: runner
+# runs the app in production mode (standalone)
 FROM node:16-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-
-COPY --from=deps-and-builder /app/public ./public
-
-# Only use standalone to reduce image size
+# only use standalone, static and public files of next to reduce image size
 COPY --from=deps-and-builder /app/.next/standalone ./
 COPY --from=deps-and-builder /app/.next/static ./.next/static
+COPY --from=deps-and-builder /app/public ./public
 
+# set the production env variable and expose the port
+ENV NODE_ENV production
+ENV PORT 3000
 EXPOSE 3000
 
-ENV PORT 3000
-
+# run the app
 CMD ["node", "server.js"]
